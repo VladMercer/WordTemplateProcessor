@@ -4,13 +4,18 @@ import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import styles from './page.module.css';
 
+type FieldInfo = {
+  name: string;
+  type: 0 | 1; // 0 - Text, 1 - Image
+};
+
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
-  const [fields, setFields] = useState<{ [key: string]: string }>({});
+  const [fields, setFields] = useState<FieldInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  const { control, handleSubmit, setValue, getValues } = useForm();
+  const { control, handleSubmit, setValue } = useForm();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -38,10 +43,13 @@ export default function Home() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setFields(data);
-        Object.keys(data).forEach((key) => {
-          setValue(key, key.endsWith(':img') ? null : '');
+        const data: { [key: string]: 0 | 1 } = await response.json();
+        const fieldArray = Object.entries(data).map(([name, type]) => ({ name, type }));
+        setFields(fieldArray);
+        
+        // Инициализируем значения формы
+        fieldArray.forEach((field) => {
+          setValue(field.name, field.type === 1 ? null : '');
         });
       } else {
         console.error('Ошибка при получении данных для полей.');
@@ -60,17 +68,18 @@ export default function Home() {
       const formData = new FormData();
       formData.append('Template', file!);
 
-      // Отправляем файлы изображений и собираем остальные поля
+      // Разделяем поля на текстовые и изображения
       const textFields: { [key: string]: string } = {};
+      const imageFields: { [key: string]: File } = {};
 
-      for (const key of Object.keys(data)) {
-        const value = data[key];
-        if (key.endsWith(':img') && value instanceof File) {
-          formData.append(key, value);
-        } else {
-          textFields[key] = value;
+      fields.forEach((field) => {
+        const value = data[field.name];
+        if (field.type === 1 && value instanceof File) {
+          formData.append(field.name, value);
+        } else if (field.type === 0) {
+          textFields[field.name] = value;
         }
-      }
+      });
 
       formData.append('Fields', JSON.stringify(textFields));
 
@@ -107,24 +116,26 @@ export default function Home() {
         </button>
       </form>
 
-      {Object.keys(fields).length > 0 && (
+      {fields.length > 0 && (
         <form onSubmit={handleSubmit(handleGeneratePdf)}>
-          {Object.keys(fields).map((field) => (
-            <div key={field}>
-              <label htmlFor={field}>{field}:</label>
-              {field.endsWith(':img') ? (
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      setValue(field, e.target.files[0]);
-                    }
-                  }}
+          {fields.map((field) => (
+            <div key={field.name}>
+              <label htmlFor={field.name}>{field.name}:</label>
+              {field.type === 1 ? (
+                <Controller
+                  name={field.name}
+                  control={control}
+                  render={({ field: { onChange } }) => (
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => onChange(e.target.files?.[0])}
+                    />
+                  )}
                 />
               ) : (
                 <Controller
-                  name={field}
+                  name={field.name}
                   control={control}
                   render={({ field }) => <input {...field} />}
                 />
@@ -139,7 +150,9 @@ export default function Home() {
 
       {pdfUrl && (
         <div>
-          <a href={pdfUrl} download="filled-template.pdf">Скачать PDF</a>
+          <a href={pdfUrl} download="filled-template.pdf">
+            Скачать PDF
+          </a>
         </div>
       )}
     </div>

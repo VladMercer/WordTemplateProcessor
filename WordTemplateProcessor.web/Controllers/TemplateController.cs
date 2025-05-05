@@ -1,8 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using WordTemplateProcessor.web.Interfaces;
-using WordTemplateProcessor.web.Requests;
-using WordTemplateProcessor.web.Services;
 
 namespace WordTemplateProcessor.web.Controllers;
 
@@ -10,10 +8,10 @@ namespace WordTemplateProcessor.web.Controllers;
 [Route("[controller]")]
 public class TemplateController : ControllerBase
 {
+    private readonly ILogger<TemplateController> _logger;
+    private readonly IPdfConverter _pdfConverter;
     private readonly IPlaceholderExtractor _placeholderExtractor;
     private readonly IPlaceholderReplacer _placeholderReplacer;
-    private readonly IPdfConverter _pdfConverter;
-    private readonly ILogger<TemplateController> _logger;
 
     public TemplateController(
         IPlaceholderExtractor placeholderExtractor,
@@ -35,24 +33,29 @@ public class TemplateController : ControllerBase
     }
 
     [HttpPost("fill-template")]
-    public async Task<IActionResult> FillTemplate([FromForm] FillTemplateRequest request)
+    public async Task<IActionResult> FillTemplate()
     {
-        // Разделение полей на текстовые и изображения
-        var textFields = request.Fields
-            .Where(f => f.Type == FieldType.Text)
-            .ToDictionary(f => f.Key, f => f.Value);
+        var form = Request.Form;
+        var template = form.Files["Template"];
+        var fieldsJson = form["Fields"];
 
-        var imageFields = request.Fields
-            .Where(f => f.Type == FieldType.Image && f.File != null)
-            .ToDictionary(f => f.Key, f =>
+        var fields = JsonSerializer.Deserialize<Dictionary<string, string>>(fieldsJson!);
+        
+        var textFields = fields
+            .Where(kvp => !form.Files.Any(f => f.Name == kvp.Key))
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        
+        var imageFields = form.Files
+            .Where(f => f.Name != "Template" && f.Length > 0)
+            .GroupBy(f => f.Name)
+            .ToDictionary(g => g.Key, g =>
             {
                 using var ms = new MemoryStream();
-                f.File.CopyTo(ms);
+                g.First().CopyTo(ms);
                 return ms.ToArray();
             });
 
-        // Обработка документа
-        await using var templateStream = request.Template.OpenReadStream();
+        await using var templateStream = template.OpenReadStream();
         var filledDocx = _placeholderReplacer.ReplacePlaceholders(templateStream, textFields, imageFields);
         var pdfBytes = await _pdfConverter.ConvertToPdfAsync(filledDocx);
 

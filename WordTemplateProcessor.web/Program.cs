@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:3000")
             .AllowAnyMethod()
             .AllowAnyHeader();
     });
@@ -50,17 +50,13 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
 app.UseCors("AllowAll");
 
-app.MapControllers();
+app.UseAuthorization();
 
 app.MapGet("/", context =>
 {
@@ -68,5 +64,6 @@ app.MapGet("/", context =>
     return Task.CompletedTask;
 });
 
+app.MapControllers();
 
 app.Run();

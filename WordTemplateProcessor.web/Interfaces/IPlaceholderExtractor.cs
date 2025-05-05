@@ -1,4 +1,4 @@
-using WordTemplateProcessor.web.Services;
+using WordTemplateProcessor.web.Enum;
 
 namespace WordTemplateProcessor.web.Interfaces;
 

@@ -14,11 +14,13 @@ public class PdfConverter : IPdfConverter
         var pdfPath = Path.Combine(tempDir, "template.pdf");
 
         await using (var fileStream = File.Create(docxPath))
+        {
             await docxStream.CopyToAsync(fileStream);
+        }
 
         var startInfo = new ProcessStartInfo
         {
-            FileName = "soffice", 
+            FileName = "soffice",
             Arguments = $"--headless --convert-to pdf \"{docxPath}\" --outdir \"{tempDir}\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -31,7 +33,7 @@ public class PdfConverter : IPdfConverter
 
         var pdfBytes = await File.ReadAllBytesAsync(pdfPath);
 
-        Directory.Delete(tempDir, true); 
+        Directory.Delete(tempDir, true);
 
         return pdfBytes;
     }
