@@ -2,159 +2,127 @@
 
 import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import styles from './page.module.css';
-
-type FieldInfo = {
-  name: string;
-  type: 0 | 1; // 0 - Text, 1 - Image
-};
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
-  const [fields, setFields] = useState<FieldInfo[]>([]);
+  const [fields, setFields] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  const { control, handleSubmit, setValue } = useForm();
+  const { control, handleSubmit, setValue } = useForm<Record<string, string>>();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleFileUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!file) {
-      alert('Пожалуйста, загрузите файл.');
-      return;
-    }
+  const parseTemplate = async (file: File) => {
+    setIsLoading(true);
+    setPdfUrl(null);
+    setFields([]);
 
     try {
-      setIsLoading(true);
+      const fd = new FormData();
+      fd.append('file', file);
 
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('http://localhost:5002/Template/parse-template', {
+      const res = await fetch('http://localhost:5002/Template/parse-template', {
         method: 'POST',
-        body: formData,
+        body: fd,
       });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
 
-      if (response.ok) {
-        const data: { [key: string]: 0 | 1 } = await response.json();
-        const fieldArray = Object.entries(data).map(([name, type]) => ({ name, type }));
-        setFields(fieldArray);
-        
-        // Инициализируем значения формы
-        fieldArray.forEach((field) => {
-          setValue(field.name, field.type === 1 ? null : '');
-        });
-      } else {
-        console.error('Ошибка при получении данных для полей.');
-      }
-    } catch (error) {
-      console.error('Ошибка при загрузке файла:', error);
+      const names: string[] = await res.json();
+      setFields(names);
+      names.forEach(name => setValue(name, ''));
+    } catch (err) {
+      console.error('Ошибка парсинга шаблона:', err);
+      alert('Не удалось распарсить шаблон.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGeneratePdf = async (data: any) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] ?? null;
+    if (!selected) return;
+    setFile(selected);
+    parseTemplate(selected);
+  };
+
+  const handleGeneratePdf = async (data: Record<string, string>) => {
+    if (!file) return;
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
+      const fd = new FormData();
+      fd.append('Template', file);
+      fd.append('Fields', JSON.stringify(data));
 
-      const formData = new FormData();
-      formData.append('Template', file!);
-
-      // Разделяем поля на текстовые и изображения
-      const textFields: { [key: string]: string } = {};
-      const imageFields: { [key: string]: File } = {};
-
-      fields.forEach((field) => {
-        const value = data[field.name];
-        if (field.type === 1 && value instanceof File) {
-          formData.append(field.name, value);
-        } else if (field.type === 0) {
-          textFields[field.name] = value;
-        }
-      });
-
-      formData.append('Fields', JSON.stringify(textFields));
-
-      const response = await fetch('http://localhost:5002/Template/fill-template', {
+      const res = await fetch('http://localhost:5002/Template/fill-template', {
         method: 'POST',
-        body: formData,
+        body: fd,
       });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
 
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setPdfUrl(url);
-      } else {
-        console.error('Ошибка при генерации PDF.');
-      }
-    } catch (error) {
-      console.error('Ошибка при отправке данных на сервер для генерации PDF:', error);
+      const blob = await res.blob();
+      setPdfUrl(URL.createObjectURL(blob));
+    } catch (err) {
+      console.error('Ошибка генерации PDF:', err);
+      alert('Не удалось сгенерировать PDF.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={styles.page}>
-      <h1>Загрузка шаблона и заполнение полей</h1>
+    <div className="bg-dark text-light min-vh-100 d-flex align-items-start pt-5">
+      <div className="container">
+        <h1 className="mb-4">Заполнение Word‑шаблона</h1>
 
-      <form onSubmit={handleFileUpload}>
-        <div>
-          <label htmlFor="fileInput">Выберите файл:</label>
-          <input type="file" id="fileInput" onChange={handleFileChange} required />
+        <div className="mb-4">
+          <label className="form-label">Выберите .docx файл:</label>
+          <input
+            type="file"
+            accept=".docx"
+            onChange={handleFileChange}
+            className="form-control bg-dark text-light border-light"
+            disabled={isLoading}
+          />
         </div>
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Загрузка...' : 'Загрузить файл'}
-        </button>
-      </form>
 
-      {fields.length > 0 && (
-        <form onSubmit={handleSubmit(handleGeneratePdf)}>
-          {fields.map((field) => (
-            <div key={field.name}>
-              <label htmlFor={field.name}>{field.name}:</label>
-              {field.type === 1 ? (
-                <Controller
-                  name={field.name}
-                  control={control}
-                  render={({ field: { onChange } }) => (
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => onChange(e.target.files?.[0])}
-                    />
-                  )}
-                />
-              ) : (
-                <Controller
-                  name={field.name}
-                  control={control}
-                  render={({ field }) => <input {...field} />}
-                />
-              )}
+        {isLoading && <p>Загружаем и парсим шаблон…</p>}
+
+        {fields.length > 0 && (
+          <form onSubmit={handleSubmit(handleGeneratePdf)} className="mb-4">
+            <div className="row">
+              {fields.map((name, index) => (
+                <div className="col-md-6 mb-3" key={name}>
+                  <label htmlFor={name} className="form-label">{name}:</label>
+                  <Controller
+                    name={name}
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        id={name}
+                        {...field}
+                        className="form-control bg-dark text-light border-secondary"
+                        placeholder={`Введите значение для ${name}`}
+                      />
+                    )}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
-          <button type="submit" disabled={isLoading}>
-            {isLoading ? 'Отправка...' : 'Получить PDF'}
-          </button>
-        </form>
-      )}
 
-      {pdfUrl && (
-        <div>
-          <a href={pdfUrl} download="filled-template.pdf">
-            Скачать PDF
-          </a>
-        </div>
-      )}
+            <button type="submit" className="btn btn-outline-light w-100" disabled={isLoading}>
+              {isLoading ? 'Генерируем PDF…' : 'Получить PDF'}
+            </button>
+          </form>
+        )}
+
+        {pdfUrl && (
+          <div className="alert alert-success">
+            <a href={pdfUrl} download="filled-template.pdf" className="btn btn-success w-100">
+              Скачать готовый PDF
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

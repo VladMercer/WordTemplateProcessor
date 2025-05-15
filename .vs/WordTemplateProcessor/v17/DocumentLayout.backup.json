@@ -1,0 +1,104 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{411C1CEE-A182-4716-A522-75D3B8B2770A}|WordToPdfConverter\\WordToPdfConverter.csproj|c:\\users\\invok\\riderprojects\\wordtemplateprocessor\\wordtopdfconverter\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{411C1CEE-A182-4716-A522-75D3B8B2770A}|WordToPdfConverter\\WordToPdfConverter.csproj|solutionrelative:wordtopdfconverter\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D570E722-1AB1-4A8B-A943-D2F26222A283}|WordImageInserter\\WordImageInserter.csproj|c:\\users\\invok\\riderprojects\\wordtemplateprocessor\\wordimageinserter\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D570E722-1AB1-4A8B-A943-D2F26222A283}|WordImageInserter\\WordImageInserter.csproj|solutionrelative:wordimageinserter\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BCE73604-4877-4F9A-8C6F-8FD600501957}|WordTemplateProcessor.web\\WordTemplateProcessor.web.csproj|c:\\users\\invok\\riderprojects\\wordtemplateprocessor\\wordtemplateprocessor.web\\wordtemplateprocessor.web.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{BCE73604-4877-4F9A-8C6F-8FD600501957}|WordTemplateProcessor.web\\WordTemplateProcessor.web.csproj|solutionrelative:wordtemplateprocessor.web\\wordtemplateprocessor.web.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D570E722-1AB1-4A8B-A943-D2F26222A283}|WordImageInserter\\WordImageInserter.csproj|C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\wordimageinserter\\properties\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D570E722-1AB1-4A8B-A943-D2F26222A283}|WordImageInserter\\WordImageInserter.csproj|solutionrelative:wordimageinserter\\properties\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\WordToPdfConverter\\Program.cs",
+              "RelativeDocumentMoniker": "WordToPdfConverter\\Program.cs",
+              "ToolTip": "C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\WordToPdfConverter\\Program.cs",
+              "RelativeToolTip": "WordToPdfConverter\\Program.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAQwBQAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T10:48:17.501Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "WordTemplateProcessor.web.csproj",
+              "DocumentMoniker": "C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\WordTemplateProcessor.web\\WordTemplateProcessor.web.csproj",
+              "RelativeDocumentMoniker": "WordTemplateProcessor.web\\WordTemplateProcessor.web.csproj",
+              "ToolTip": "C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\WordTemplateProcessor.web\\WordTemplateProcessor.web.csproj",
+              "RelativeToolTip": "WordTemplateProcessor.web\\WordTemplateProcessor.web.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-05-14T14:26:03.658Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\WordImageInserter\\Program.cs",
+              "RelativeDocumentMoniker": "WordImageInserter\\Program.cs",
+              "ToolTip": "C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\WordImageInserter\\Program.cs",
+              "RelativeToolTip": "WordImageInserter\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-14T16:19:33.858Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{269a02dc-6af8-11d3-bdc4-00c04f688e50}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "AssemblyInfo.cs",
+              "DocumentMoniker": "C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\WordImageInserter\\Properties\\AssemblyInfo.cs",
+              "RelativeDocumentMoniker": "WordImageInserter\\Properties\\AssemblyInfo.cs",
+              "ToolTip": "C:\\Users\\invok\\RiderProjects\\WordTemplateProcessor\\WordImageInserter\\Properties\\AssemblyInfo.cs",
+              "RelativeToolTip": "WordImageInserter\\Properties\\AssemblyInfo.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-14T17:17:34.572Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

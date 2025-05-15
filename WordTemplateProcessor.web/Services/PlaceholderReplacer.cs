@@ -1,8 +1,6 @@
+using System.Diagnostics;
 using System.Text.RegularExpressions;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Drawing;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
 using OpenXmlPowerTools;
 using WordTemplateProcessor.web.Interfaces;
 
@@ -10,96 +8,79 @@ namespace WordTemplateProcessor.web.Services;
 
 public class PlaceholderReplacer : IPlaceholderReplacer
 {
-    private readonly ILogger<PlaceholderReplacer> _logger;
+    private readonly string _wordInserterExePath;
+    private readonly string _stampPath;
 
-    public PlaceholderReplacer(ILogger<PlaceholderReplacer> logger)
+    public PlaceholderReplacer(IConfiguration config)
     {
-        _logger = logger;
+        _wordInserterExePath = config["WordImageInserter:ExePathImageInserter"]!;
+        _stampPath = config["WordImageInserter:StampPath"]!;
     }
 
-    public MemoryStream ReplacePlaceholders(
+    public async Task<MemoryStream> ReplacePlaceholders(
         Stream docxStream,
-        Dictionary<string, string> fields,
-        Dictionary<string, byte[]> imageFields)
+        Dictionary<string, string> textFields)
     {
-        var outputStream = new MemoryStream();
+        var intermediate = new MemoryStream();
         docxStream.Position = 0;
-        docxStream.CopyTo(outputStream);
-        outputStream.Position = 0;
+        docxStream.CopyTo(intermediate);
 
-        try
+        intermediate.Position = 0;
+        using (var wordDoc = WordprocessingDocument.Open(intermediate, true))
         {
-            using var wordDoc = WordprocessingDocument.Open(outputStream, true);
             var mainPart = wordDoc.MainDocumentPart;
-
             var xdoc = mainPart.GetXElement();
-            
-            foreach (var (key, value) in fields)
+
+            foreach (var kv in textFields)
             {
-                try
-                {
-                    var pattern = new Regex(Regex.Escape("{{" + key + "}}"));
-                    var paragraphs = xdoc.Descendants(W.p);
-                    OpenXmlRegex.Replace(paragraphs, pattern, value ?? "", null);
-                    _logger.LogInformation("Заменён текстовый плейсхолдер: {{Key}}", key);
-                }
-                catch (Exception innerEx)
-                {
-                    _logger.LogWarning(innerEx, "Ошибка при замене плейсхолдера: {Key}", key);
-                }
+                var placeholder = $"{{{{{kv.Key}}}}}";
+                var rx = new Regex(Regex.Escape(placeholder));
+                OpenXmlRegex.Replace(
+                    xdoc.Descendants(W.p),
+                    rx,
+                    kv.Value ?? string.Empty,
+                    null);
             }
-            
+
             mainPart.SaveXDocument();
-            
-            foreach (var (key, imageBytes) in imageFields)
-            {
-                var tag = key;
-
-                var sdts = wordDoc.MainDocumentPart.Document.Body
-                    .Descendants<OpenXmlElement>()
-                    .Where(el =>
-                        (el is SdtBlock || el is SdtRun) &&
-                        el.Elements<SdtProperties>().FirstOrDefault()?.GetFirstChild<Tag>()?.Val == tag
-                    );
-
-                foreach (var sdt in sdts)
-                {
-                    var drawing = sdt.Descendants<Drawing>().FirstOrDefault();
-                    if (drawing == null)
-                    {
-                        _logger.LogWarning("Не найден Drawing в SdtBlock для тега {Tag}", tag);
-                        continue;
-                    }
-
-                    var blip = drawing.Descendants<Blip>().FirstOrDefault();
-                    if (blip == null)
-                    {
-                        _logger.LogWarning("Не найден Blip в Drawing для тега {Tag}", tag);
-                        continue;
-                    }
-
-                    var relId = blip.Embed?.Value;
-                    if (string.IsNullOrEmpty(relId))
-                    {
-                        _logger.LogWarning("Пустой или отсутствующий Embed Id для тега {Tag}", tag);
-                        continue;
-                    }
-
-                    var imagePart = (ImagePart)wordDoc.MainDocumentPart.GetPartById(relId);
-                    using var imageStream = new MemoryStream(imageBytes);
-                    imagePart.FeedData(imageStream);
-
-                    _logger.LogInformation("Изображение успешно заменено для контент-контрола с тегом {Tag}", tag);
-                }
-            }
         }
-        catch (Exception ex)
+
+        var tempDir = Path.Combine(Path.GetTempPath(), "wtp");
+        Directory.CreateDirectory(tempDir);
+        var tempDocxPath = Path.Combine(tempDir, $"{Guid.NewGuid()}.docx");
+
+        await using (var fs = File.Create(tempDocxPath))
         {
-            _logger.LogError(ex, "Ошибка при обработке шаблона Word.");
-            throw;
+            intermediate.Position = 0;
+            await intermediate.CopyToAsync(fs);
         }
 
-        outputStream.Position = 0;
-        return outputStream;
+        var psi = new ProcessStartInfo
+        {
+            FileName = _wordInserterExePath,
+            Arguments = $"\"{tempDocxPath}\" \"{_stampPath}\"",
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        using (var proc = Process.Start(psi))
+        {
+            string stdout = await proc.StandardOutput.ReadToEndAsync();
+            string stderr = await proc.StandardError.ReadToEndAsync();
+            proc.WaitForExit();
+
+
+            var resultStream = new MemoryStream();
+            await using (var fs = File.OpenRead(tempDocxPath))
+            {
+                await fs.CopyToAsync(resultStream);
+            }
+
+            resultStream.Position = 0;
+
+            return resultStream;
+        }
     }
 }

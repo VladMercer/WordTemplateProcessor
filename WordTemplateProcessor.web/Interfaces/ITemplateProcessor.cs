@@ -2,8 +2,7 @@ namespace WordTemplateProcessor.web.Interfaces;
 
 public interface IPlaceholderReplacer
 {
-    MemoryStream ReplacePlaceholders(
+    Task<MemoryStream> ReplacePlaceholders(
         Stream docxStream,
-        Dictionary<string, string> fields,
-        Dictionary<string, byte[]> imageFields);
+        Dictionary<string, string> textFields);
 }

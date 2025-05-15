@@ -166,3 +166,80 @@ a.secondary {
     filter: invert();
   }
 }
+
+.form-wrapper {
+  width: 100%;
+  max-width: 480px;
+  background: var(--gray-alpha-100);
+  padding: 32px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--gray-alpha-200);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 0 auto;
+}
+
+/* Общие стили для форм внутри .form-wrapper */
+.form-wrapper form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Строка поля (label + input) */
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Метка поля */
+.field-row label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Текстовое поле */
+.field-row input[type="text"],
+.field-row input[type="file"],
+.field-row textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--gray-alpha-200);
+  border-radius: 4px;
+  font-size: 14px;
+  background: transparent;
+}
+
+/* Фокус на поле */
+.field-row input:focus,
+.field-row textarea:focus {
+  outline: none;
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 2px var(--gray-alpha-200);
+}
+
+/* Группа кнопок */
+.cta-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Переопределение стилей для кнопок в форме */
+.cta-buttons .button {
+  flex: 1;
+  text-align: center;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 600px) {
+  .form-wrapper {
+    padding: 20px;
+    box-shadow: none;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+  }
+}

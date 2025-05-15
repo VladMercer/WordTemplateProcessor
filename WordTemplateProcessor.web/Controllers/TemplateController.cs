@@ -8,7 +8,6 @@ namespace WordTemplateProcessor.web.Controllers;
 [Route("[controller]")]
 public class TemplateController : ControllerBase
 {
-    private readonly ILogger<TemplateController> _logger;
     private readonly IPdfConverter _pdfConverter;
     private readonly IPlaceholderExtractor _placeholderExtractor;
     private readonly IPlaceholderReplacer _placeholderReplacer;
@@ -16,12 +15,11 @@ public class TemplateController : ControllerBase
     public TemplateController(
         IPlaceholderExtractor placeholderExtractor,
         IPlaceholderReplacer placeholderReplacer,
-        IPdfConverter pdfConverter, ILogger<TemplateController> logger)
+        IPdfConverter pdfConverter)
     {
         _placeholderExtractor = placeholderExtractor;
         _placeholderReplacer = placeholderReplacer;
         _pdfConverter = pdfConverter;
-        _logger = logger;
     }
 
     [HttpPost("parse-template")]
@@ -37,26 +35,17 @@ public class TemplateController : ControllerBase
     {
         var form = Request.Form;
         var template = form.Files["Template"];
-        var fieldsJson = form["Fields"];
 
-        var fields = JsonSerializer.Deserialize<Dictionary<string, string>>(fieldsJson!);
-        
-        var textFields = fields
-            .Where(kvp => !form.Files.Any(f => f.Name == kvp.Key))
-            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        
-        var imageFields = form.Files
-            .Where(f => f.Name != "Template" && f.Length > 0)
-            .GroupBy(f => f.Name)
-            .ToDictionary(g => g.Key, g =>
-            {
-                using var ms = new MemoryStream();
-                g.First().CopyTo(ms);
-                return ms.ToArray();
-            });
+        var fieldsJson = form["Fields"];
+        Dictionary<string, string> textFields;
+        textFields = JsonSerializer.Deserialize<Dictionary<string, string>>(fieldsJson!) ??
+                     new Dictionary<string, string>();
 
         await using var templateStream = template.OpenReadStream();
-        var filledDocx = _placeholderReplacer.ReplacePlaceholders(templateStream, textFields, imageFields);
+        var filledDocx = await _placeholderReplacer
+            .ReplacePlaceholders(templateStream, textFields);
+
+        filledDocx.Position = 0;
         var pdfBytes = await _pdfConverter.ConvertToPdfAsync(filledDocx);
 
         return File(pdfBytes, "application/pdf", "filled.pdf");
